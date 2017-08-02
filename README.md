@@ -13,9 +13,9 @@ All codes are in MATLAB 2016b
 
 2. 2-3D: Learning convolutional filters for multispectral images. Also contains code for multispectral inpating and demosaicking.
 
-3. 3D: Learning 3D convolutional filters for video datasets. Also contains code for video deblurring using the filters learned.
+3. 3D: Learning 3D convolutional filters for video datasets (to be downloaded separately). Also contains code for video deblurring using the filters learned.
 
-4. 4D: Learning 4D filters for lightfield datasets. Also contains code for novel view synthesis using filters learned.
+4. 4D: Learning 4D filters for lightfield datasets (sample input lightfield data provided). Also contains code for novel view synthesis using filters learned.
 
 5. image_helpers: Miscellaneous utility code for reading data, contrast normalization, etc.
 
