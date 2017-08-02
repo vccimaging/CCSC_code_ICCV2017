@@ -3,7 +3,7 @@ This is the source code repository for the ICCV 2017 paper "Consensus Convolutio
 
 #### Authors: 
 
-Biswarup Chudhury, Robin Swanson, Felix Heide, Gordon Wtzstein, and Wolfgang Heidrich.
+Biswarup Choudhury, Robin Swanson, Felix Heide, Gordon Wetzstein, and Wolfgang Heidrich.
 
 #### Repository Information: 
 
