@@ -17,9 +17,11 @@ All codes are in MATLAB 2016b
 
 4. 4D: Learning 4D filters for lightfield datasets. Also contains code for novel view synthesis using filters learned.
 
+5. image_helpers: Miscellaneous utility code for reading data, contrast normalization, etc.
+
 #### Memory Requirement:
 
-Tested under 128GB of memory.
+All experiments were conducted under 128GB of memory.
 
 #### Reference:
 
