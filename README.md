@@ -7,11 +7,11 @@ Biswarup Choudhury, Robin Swanson, Felix Heide, Gordon Wetzstein, and Wolfgang H
 
 #### Repository Information: 
 
-All codes are in MATLAB 2016b
+All code was written and tested in MATLAB 2016b
 
-1. 2D: Learning 2D convolutional filters from large image datasets, like ImageNet (to be downloaded separately). Also contains code for reconstruction problems like Inpainting and Poisson deconvolution using the filters learned. 
+1. 2D: Learning 2D convolutional filters from large image datasets, like ImageNet (to be downloaded separately). Also contains code for reconstruction problems such as inpainting and Poisson deconvolution using the filters learned. 
 
-2. 2-3D: Learning convolutional filters for multispectral images. Also contains code for multispectral inpating and demosaicking.
+2. 2-3D: Learning convolutional filters for hyperspectral images. Also contains code for hyperspectral inpainting and demosaicing.
 
 3. 3D: Learning 3D convolutional filters for video datasets (to be downloaded separately). Also contains code for video deblurring using the filters learned.
 
@@ -19,7 +19,7 @@ All codes are in MATLAB 2016b
 
 5. image_helpers: Miscellaneous utility code for reading data, contrast normalization, etc.
 
-#### Memory Requirement:
+#### Memory Requirements:
 
 All experiments were conducted under 128GB of memory.
 
