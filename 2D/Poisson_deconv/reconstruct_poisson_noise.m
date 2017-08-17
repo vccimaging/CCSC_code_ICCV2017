@@ -8,7 +8,7 @@ outputfolder = 'results_rec_dataset';
 mkdir( outputfolder );
 
 %Load the images
-addpath('./image_helpers');
+addpath('../../image_helpers');
 CONTRAST_NORMALIZE = 'none'; 
 ZERO_MEAN = 0;   
 COLOR_IMAGES = 'gray';   
