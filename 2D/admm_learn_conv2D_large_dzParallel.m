@@ -1,4 +1,4 @@
-function [ d_res, z_res, DZ, iterations ] = admm_learn_conv2D_large2(b, kernel_size, ...
+function [ d_res, z_res, DZ, iterations ] = admm_learn_conv2D_large_dzParallel(b, kernel_size, ...
                     lambda_residual, lambda_prior, ...
                     max_it, tol, ...
                     verbose, init)
@@ -72,7 +72,7 @@ function [ d_res, z_res, DZ, iterations ] = admm_learn_conv2D_large2(b, kernel_s
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Iteration for local back and forth
-    max_it_d = 10;
+    max_it_d = 5;
     max_it_z = 10;
 
     %%%%%%%%%%%%% d specific
@@ -87,8 +87,7 @@ function [ d_res, z_res, DZ, iterations ] = admm_learn_conv2D_large2(b, kernel_s
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %Iterate
-    for i = 1:max_it     
-        i
+    for i = 1:max_it
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
         %obj_val_min = min(obj_val_filter, obj_val_z);
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
