@@ -6,7 +6,7 @@ close all;
 %% Debug options
 verbose = 'all';
 
-addpath('./image_helpers');
+addpath('../../image_helpers');
 CONTRAST_NORMALIZE = 'none'; 
 ZERO_MEAN = 0;   
 COLOR_IMAGES = 'gray';   
