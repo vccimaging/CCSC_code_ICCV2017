@@ -6,9 +6,7 @@ close all;
 %% Debug options
 verbose = 'brief';
 
-%% Load the movie 
-    
-%Load movie
+%Load lightfield dataset
 fn = './Datasets_lf/food_localCN_bis3_8x8.mat';
 I = load(fn);
 b = I.b;
@@ -78,9 +76,6 @@ tic();
 prefix = 'ours';
 [ d, z, Dz, obj, iterations]  = admm_learn_conv4D_lightfield(b, kernel_size, lambda_residual, lambda, max_it, tol, verbose_admm, []);
 
-
-%prefix = 'bristow';
-%[ d, z, Dz, obj, iterations ]  = admm_learn_conv2D(b, kernel_size, lambda, max_it, tol, verbose_admm, []); 
 tt = toc
 
 %Show result
@@ -107,7 +102,7 @@ fprintf('Done sparse coding learning >>> saving.\n\n', tt)
 
 %Save
 %%dt = datestr(now,'mm:dd:HH:MM');
-save(sprintf('filters4_lightfield_%s.mat', prefix), 'd');
+save(sprintf('Filters_lightfield_%s.mat', prefix), 'd');
 
 %Debug
 fprintf('Done sparse coding learning! --> Time %2.2f sec.\n\n', tt)
