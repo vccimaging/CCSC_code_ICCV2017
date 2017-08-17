@@ -7,7 +7,11 @@ lambda = 1.0;
 verbose = 'all';
 
 % Load many 31 channel hyperspectral images
-load('learning_data.mat', 'b');
+% Format should be [x, y, wavelengths, indexes]
+% For information on finding hyperspectral data please see the readme
+% For best results all data should be similarly normalized but not contrast
+% normalized.
+load('training_data.mat', 'b');
 
 % Filter from local contrast normalization
 k = fspecial('gaussian',[13 13],3*1.591); 
@@ -28,7 +32,7 @@ tic();
 tt = toc;
 
 % Save dictionaryh
-save('hyperspectral_dictionary.mat', 'd', 'z', 'Dz', '-v7.3');
+save('../Filters/2D-3D-Hyperspectral.mat', 'd', 'z', 'Dz', '-v7.3');
 
 % Debug
 fprintf('Done dictionary learning! --> Time %2.2f sec.\n\n', tt)

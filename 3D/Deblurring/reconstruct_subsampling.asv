@@ -1,0 +1,113 @@
+
+clear;
+close all;
+
+% Parameters
+lambda_residual = 10000.0;
+lambda = 1/8; 
+verbose_admm = 'brief';
+max_it = 120;
+tol = 1e-6;
+
+% Load video data as variable 'b'
+% Format should be [x, y, time, indexes]
+% For information on finding video data please see the readme
+% For best results all data should be similarly normalized but not contrast
+% normalized.
+load('videos/testing_data.mat', 'b');
+b_all = b(:,:,:,:);
+
+% Load Dictionary as variable 'd'
+load('../filters/3D_video_filters.mat', 'd');
+
+%Sampling matrix
+MtM = ones(size(b_all(:,:,:,1)));
+
+pp = zeros(length(1:size(b_all,4)),3);
+output = cell(length(pp),2);
+
+psf = imread('snake.png');
+psf = imresize(double(psf(:,:,1)), [3,3]);
+psf = psf./sum(psf(:));
+psf = repmat(psf,[1,1,3]);
+psf(:,:,1) = 0;
+psf(:,:,3) = 0;
+
+%Padding for psnr
+psrn_pad = 10;
+
+for i=1:size(b_all,4)
+   
+b_clean = mat2gray(b_all(:,:,:,i));
+b = imfilter(b_clean, psf, 'same', 'conv', 'symmetric');
+
+%Edgetaper for krishnan
+K = psf(:,:,floor(size(psf,3)/2) + 1);
+for f = 1:size(b,3)
+    bk(:,:,f) = edgetaper(b(:,:,f), K);
+end   
+
+%Blurry input PSNR for comparison
+% pp(i,3) = psnr( b(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), b_clean(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), 1 );
+pp(i,3) = psnr(b_clean, b, 1);
+
+% Per-Frame Normalization
+vmsi = permute(reshape(double(b), [], size(b,3)), [2 1]);
+veam = mean(vmsi,2);
+vstd = std(vmsi, 0, 2);
+vmsi = (vmsi-repmat(veam, [1 size(vmsi,2)])) ./ repmat(vstd, [1 size(vmsi,2)]);
+nb = reshape(vmsi', size(b));
+% nb = b;
+
+% Filter from local contrast normalization
+k = fspecial('gaussian',[15 15],3 * 1.591); 
+smooth_init = imfilter(nb, k, 'same', 'conv', 'symmetric');
+
+fprintf('Doing sparse coding reconstruction.\n\n')
+tic();
+
+[z, Dz]  = admm_solve_conv23D_weighted_sampling(nb, d, MtM, lambda_residual, lambda, max_it, tol, verbose_admm, psf, smooth_init);
+
+tt = toc;
+fprintf('Done sparse coding! --> Time %2.2f sec.\n\n', tt)
+
+sig_rec = Dz;
+
+% Un-normalize
+vemm = reshape(permute(repmat(veam, [1 size(sig_rec,2)*size(sig_rec,1)]), [2 1]), size(sig_rec));
+vssd = reshape(permute(repmat(vstd, [1 size(sig_rec,2)*size(sig_rec,1)]), [2 1]), size(sig_rec));
+sig_rec_disp = (sig_rec .* vssd + vemm);
+
+% Save values
+% pp(i,1) = psnr( sig_rec_disp(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), b_clean(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), 1 );
+pp(i,1) = psnr(b_clean, sig_rec_disp, 1);
+output{i,1} = sig_rec_disp;
+                
+%Deblur using a hyperlaplacian prior independently on each channel
+% D. Krishnan, R. Fergus: "Fast Image Deconvolution using Hyper-Laplacian
+% Priors", Proceedings of NIPS 2009.
+fprintf('\nComputing hyperlaplacian naive deconvolution ... \n\n')
+addpath('./hyperlaplacian_code');
+
+tic()
+lambda2 = 1000;
+echo off
+result = zeros(size(b));
+K = psf(:,:,floor(size(psf,3)/2) + 1);
+for f = 1:size(b,3)
+    result(:,:,f)= fast_deconv(bk(:,:,f), K, lambda2, 2/3, bk(:,:,f));
+end   
+toc()
+
+% Save values
+% pp(i,2) = psnr( result(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), b_clean(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), 1 );
+pp(i,2) = psnr( b_clean(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), result(1 + psrn_pad:end - psrn_pad,1 + psrn_pad:end - psrn_pad,:), 1 );
+output{i,2} = result;
+
+%Save some stuff
+save('video_test_felix_snake3_fixed.mat', 'pp', 'output');
+
+end
+
+%% 38.3838   37.9813   33.8806
+%% 38.9478   37.9813   33.8806

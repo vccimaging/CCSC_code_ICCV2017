@@ -7,7 +7,10 @@ max_it = 200;
 
 % Load hyperspectral data as variable b 
 % Format should be [x, y, wavelengths, indexes]
-load('demosaic_data.mat', 'b');
+% For information on finding hyperspectral data please see the readme
+% For best results all data should be similarly normalized but not contrast
+% normalized.
+load('data_to_demosaic.mat', 'b');
 b_all = b;
 
 % Load Dictionary
