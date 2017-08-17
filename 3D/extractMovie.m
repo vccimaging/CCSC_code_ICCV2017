@@ -3,12 +3,6 @@ clear;
 close all;
 
 %Define filenames
-
-%Define filenames
-%fn = './data_videos/sintel-2048-surround.mp4';
-%start_frame = 7920;
-%nFrames = 200;
-
 fn = './data_videos/drift_hungary_1280x720.mp4';
 start_frame = 4090;
 nFrames = 140;
