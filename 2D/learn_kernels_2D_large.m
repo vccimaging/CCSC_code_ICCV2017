@@ -4,14 +4,11 @@ clear;
 close all;
 
 %% Load the data
-
-addpath('./image_helpers');
+addpath('../image_helpers');
 CONTRAST_NORMALIZE = 'local_cn'; 
 ZERO_MEAN = 1;   
 COLOR_IMAGES = 'gray';                         
-[b] = CreateImages('./Large_Datset/',CONTRAST_NORMALIZE,ZERO_MEAN,COLOR_IMAGES);
-
-%One long dataset iterating over color if defined
+[b] = CreateImages('./Large_Datset/',CONTRAST_NORMALIZE,ZERO_MEAN,COLOR_IMAGES); % Replace directory with large image data directory.
 b = reshape(b, size(b,1), size(b,2), [] ); 
 
 %% Define the parameters
@@ -19,23 +16,19 @@ kernel_size = [11, 11, 100];
 lambda_residual = 1.0;
 lambda = 1.0; %2.8
 
-
-%% Do the reconstruction  
 fprintf('Doing sparse coding kernel learning for k = %d [%d x %d] kernels.\n\n', kernel_size(3), kernel_size(1), kernel_size(2) )
 
-%Optim options
+%% Optim options
 verbose_admm = 'all';
 max_it = 20;
 tol = 1e-3;
-
 tic();
 
-prefix = 'ours';
-[ d, z, Dz, iterations]  = admm_learn_conv2D_large(b, kernel_size, lambda_residual, lambda, max_it, tol, verbose_admm, []);
-
+%% Replace with add_learn_conv2D_dzParallel.m if necessary (Both d and z parallel for lower memory and faster computation)
+[ d, z, Dz, iterations]  = admm_learn_conv2D_large_dParallel(b, kernel_size, lambda_residual, lambda, max_it, tol, verbose_admm, []);
 tt = toc
 
-%Show result
+%% Show result
 psf_radius = 5;
 figure();    
 pd = 1;
@@ -47,8 +40,9 @@ end
 imagesc(d_disp), colormap gray, axis image, colorbar, title('Final filter estimate');
 
 
-%Save
+%% Save
+prefix = 'ours';
 save(sprintf('Filters_%s_2D_large.mat', prefix), 'd', 'Dz', 'iterations');
 
-%Debug
+%% Debug
 fprintf('Done sparse coding learning! --> Time %2.2f sec.\n\n', tt)
