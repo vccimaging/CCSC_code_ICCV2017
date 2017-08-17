@@ -1,9 +1,9 @@
 %Load movie
 mov_file = cell(0);
 mov_file{1} = './movs/drift_hungary_1280x720/full_movie.mat';
-mov_file{2} = './movs/sintel-2048-surround/full_movie.mat';
-mov_file{3} = './movs/navegar_la_reina_morsa_1280x720_2/full_movie.mat';
-mov_file{4} = './movs/legend_4k-_iceland_in_ultra_hd_1920x1080/full_movie.mat';
+%mov_file{2} = './movs/sintel-2048-surround/full_movie.mat';
+%mov_file{3} = './movs/navegar_la_reina_morsa_1280x720_2/full_movie.mat';
+%mov_file{4} = './movs/legend_4k-_iceland_in_ultra_hd_1920x1080/full_movie.mat';
 
 verbose = 'all';
 
@@ -27,7 +27,7 @@ for m = 1:length(mov_file)
     end
     I = I_gray;
 
-    I = local_cn(I);
+    I = local_cn(I); %% Apply contrast normalisation to video frames 
     
     %% Show the movie
     if strcmp(verbose, 'all') 
@@ -40,5 +40,5 @@ for m = 1:length(mov_file)
     end
     
     %Now save
-    %save(output_file, 'I');
+    save(output_file, 'I');
 end
