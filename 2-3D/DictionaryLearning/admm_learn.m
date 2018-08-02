@@ -5,18 +5,18 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
 
     %Kernel size contains kernel_size = [psf_s, psf_s, k]
     psf_s = kernel_size(1);
-    k = kernel_size(end);
-    n = size(b,5);
+    k = kernel_size(4);
+    n = size(b,4);
                 
     %PSF estimation
     psf_radius = floor( psf_s/2 );
-    size_x = [size(b,1) + 2*psf_radius, size(b,2) + 2*psf_radius, size(b,3), size(b,4), n];
+    size_x = [size(b,1) + 2*psf_radius, size(b,2) + 2*psf_radius, size(b,3), n];
     size_z = [size_x(1), size_x(2), k, n];
-    size_k_full = [size_x(1), size_x(2), size_x(3), size_x(4), k]; 
-    size_zhat = [size_x(1), size_x(2), 1, 1, k, n];
+    size_k_full = [size_x(1), size_x(2), size_x(3), k]; 
+    size_zhat = [size_x(1), size_x(2), 1, k, n];
        
     %Smooth offset
-    smoothinit = padarray( smooth_init, [psf_radius, psf_radius, 0, 0, 0], 'symmetric', 'both');
+    smoothinit = padarray( smooth_init, [psf_radius, psf_radius, 0, 0], 'symmetric', 'both');
     
     % Objective
     objective = @(z, dh) objectiveFunction( z, dh, b, lambda_residual, lambda_prior, psf_radius, size_z, size_x, smoothinit );
@@ -51,14 +51,14 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
         d_hat = init.d;
         d = [];
     else
-        d = padarray( randn(kernel_size([1 2 5])), [size_x(1) - kernel_size(1), size_x(2) - kernel_size(2), 0], 0, 'post');
+        d = padarray( randn(kernel_size([1 2 4])), [size_x(1) - kernel_size(1), size_x(2) - kernel_size(2), 0], 0, 'post');
         d = circshift(d, -[psf_radius, psf_radius, 0] );
-        d = permute(repmat(d, [1 1 1 kernel_size(3) kernel_size(4)]), [1 2 4 5 3]);
+        d = permute(repmat(d, [1 1 1 kernel_size(3)]), [1 2 4 3]);
         d_hat = fft2(d);
     end
     
     %% Initialize variables for Z
-    varsize_Z = {size_x([1 2 3 4 5]), size_z};
+    varsize_Z = {size_x([1 2 3 4]), size_z};
     xi_Z = { zeros(varsize_Z{1}), zeros(varsize_Z{2}) };
     xi_Z_hat = { zeros(varsize_Z{1}), zeros(varsize_Z{2}) };
     
@@ -84,6 +84,7 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
     
     %Iterate
     for i = 1:max_it
+
         %% Update kernels
         %Timing
         tic;
@@ -96,7 +97,7 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
 
         %Timing
         t_kernel = toc;
-        z_hat = fft2(z); %reshape( fft2(reshape(z, size_z(1),size_z(2),size_z(3),[])), size_zhat );
+        z_hat = reshape( fft2(reshape(z, size_z(1),size_z(2),size_z(3),[])), size_zhat );
 
         for i_d = 1:max_it_d
 
@@ -104,7 +105,7 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
             tic;
             
             %Compute v_i = H_i * z
-            v_D{1} = real(ifft2( reshape(sum( bsxfun(@times, d_hat, permute(z_hat, [1 2 5 6 3 4])), 5), size_x) ));
+            v_D{1} = real(ifft2( reshape(sum( bsxfun(@times, d_hat, z_hat), 4), size_x) ));
             v_D{2} = d;
 
             %Compute proximal updates
@@ -167,7 +168,7 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
             tic;
 
             %Compute v_i = H_i * z
-            v_Z{1} = real(ifft2(squeeze(sum(bsxfun(@times, d_hat, permute(z_hat, [1 2 5 6 3 4])), 5))));
+            v_Z{1} = real(ifft2(squeeze(sum(bsxfun(@times, d_hat, permute(z_hat, [1 2 5 3 4])), 4))));
             v_Z{2} = z;
 
             %Compute proximal updates
@@ -184,7 +185,7 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
             end
 
             %Solve convolutional inverse
-            z_hat = solve_conv_term_Z(dhatT_flat, dhatTdhat_flat, xi_Z_hat, gammas_Z, size_z, kernel_size(3)*kernel_size(4));
+            z_hat = solve_conv_term_Z(dhatT_flat, dhatTdhat_flat, xi_Z_hat, gammas_Z, size_z, kernel_size(3));
             z = real(ifft2(z_hat));
 
             %Timing
@@ -200,16 +201,16 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
         
         obj_val_z = obj_val;
         
-%         if obj_val_min <= obj_val_filter && obj_val_min <= obj_val_z
-%             z_hat = z_hat_old;
-%             z = reshape( real(ifft2( reshape(z_hat, size_x(1), size_x(2), []) )), size_z );
-%             
-%             d_hat = d_hat_old;
-%             d = real(ifft2( d_hat ));
-%             
-%             obj_val = objective(z, d_hat);
-%             break;
-%         end
+        if obj_val_min <= obj_val_filter && obj_val_min <= obj_val_z
+            z_hat = z_hat_old;
+            z = reshape( real(ifft2( reshape(z_hat, size_x(1), size_x(2), []) )), size_z );
+            
+            d_hat = d_hat_old;
+            d = real(ifft2( d_hat ));
+            
+            obj_val = objective(z, d_hat);
+            break;
+        end
         
         %Debug progress
         z_diff = z - z_old;
@@ -231,7 +232,7 @@ function [ d_res, z_res, Dz, obj_val ] = admm_learn(b, kernel_size,...
     d_res = d_res(1:psf_radius*2+1, 1:psf_radius*2+1, :, :);
     
     z_hat = reshape(fft2(z), size_zhat);
-    Dz = real(ifft2( reshape(sum(bsxfun(@times, d_hat, z_hat), 5), size_x) )) + smoothinit;
+    Dz = real(ifft2( reshape(sum(bsxfun(@times, d_hat, z_hat), 4), size_x) )) + smoothinit;
     
 return;
 
@@ -239,7 +240,7 @@ function [u_proj] = KernelConstraintProj( u, size_k_full, psf_radius)
     
     %Get support
     u_proj = circshift( u, [psf_radius, psf_radius, 0, 0] ); 
-    u_proj = u_proj(1:psf_radius*2+1, 1:psf_radius*2+1, :, :, :);
+    u_proj = u_proj(1:psf_radius*2+1, 1:psf_radius*2+1, :, :);
     
     %Normalize
     u_norm = repmat( sum(sum(u_proj.^2, 1),2), [size(u_proj,1), size(u_proj,2), 1, 1] );
@@ -262,7 +263,7 @@ function [dhat_flat, dhatTdhat_flat] = precompute_H_hat_Z(dhat, size_x )
 % Computes the spectra for the inversion of all H_i
 
 %Precompute the dot products for each frequency
-dhat_flat = reshape( dhat, size_x(1) * size_x(2), size_x(3)*size_x(4), [] );
+dhat_flat = reshape( dhat, size_x(1) * size_x(2), size_x(3), [] );
 dhatTdhat_flat = sum(conj(dhat_flat).*dhat_flat,3);
 
 return;
@@ -276,7 +277,7 @@ function d_hat = solve_conv_term_D(z_hat, xi_hat, rho, size_z )
     % with rho = gamma(2)/gamma(1)
     
     %Size
-    sy = size_z(1); sx = size_z(2); sw = size(xi_hat{1},3)*size(xi_hat{1},4); k = size_z(3); n = size_z(4);
+    sy = size_z(1); sx = size_z(2); sw = size(xi_hat{1},3); k = size_z(3); n = size_z(4);
 
     %Reshape to cell per frequency
     xi_hat_1_cell = num2cell( permute( reshape(xi_hat{1}, sx * sy * sw, n), [2,1] ), 1);
@@ -294,7 +295,7 @@ function d_hat = solve_conv_term_D(z_hat, xi_hat, rho, size_z )
     end
 
     %Reshape to get back the new Dhat
-    d_hat = reshape( permute(cell2mat(x), [2,1]), size(xi_hat{2}) );
+    d_hat = reshape( permute(cell2mat(x), [2,1]), [sy,sx,sw,k] );
 
 return;
 
@@ -325,19 +326,16 @@ return;
 function f_val = objectiveFunction( z, d_hat, b, lambda_residual, lambda, psf_radius, size_z, size_x, smoothinit)
     
     %Params
-%     n = size_z(4);
+    n = size_z(4);
 
-    %Data term and regularizer
-%     z2 = permute(repmat(z, [1 1 1 1 size_x(3)]), [1 2 5 3 4]);
-%     zhat = reshape( fft2(reshape(z2,size_z(1),size_z(2),size_z(3),[])), size(z2) );
-%     Dz = real(ifft2( reshape(sum(repmat(d_hat,[1,1,1,1,n]) .* zhat, 4), size_x) )) + smoothinit;
-    
-    z_hat = permute(fft2(z), [1 2 5 6 3 4]);
-    Dz = real(ifft2( squeeze(sum(bsxfun(@times, d_hat, z_hat),5)) )) + smoothinit;
+    %Dataterm and regularizer
+    z2 = permute(repmat(z, [1 1 1 1 size_x(3)]), [1 2 5 3 4]);
+    zhat = reshape( fft2(reshape(z2,size_z(1),size_z(2),size_z(3),[])), size(z2) );
+    Dz = real(ifft2( reshape(sum(repmat(d_hat,[1,1,1,1,n]) .* zhat, 4), size_x) )) + smoothinit;
     
     f_z = lambda_residual * 1/2 * norm( reshape( Dz(1 + psf_radius:end - psf_radius, ...
-            1 + psf_radius:end - psf_radius,:,:,:) - b, [], 1) , 2 )^2;
-    g_z = lambda * sum( abs( z(:) ), 1 );
+            1 + psf_radius:end - psf_radius,:,:) - b, [], 1) , 2 )^2;
+    g_z = lambda * sum( abs( z2(:) ), 1 );
     
     %Function val
     f_val = f_z + g_z;

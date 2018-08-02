@@ -1,6 +1,5 @@
 
 % Define dictionary parameters [x, y, wavelengths, number of filters]
-% For lightfields, etc. you may want e.g., [x, y, sx, sy, n.o.f]
 kernel_size = [11, 11, 31, 100];
 lambda_residual = 1.0;
 lambda = 1.0; 
